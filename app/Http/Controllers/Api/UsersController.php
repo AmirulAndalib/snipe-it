@@ -13,6 +13,8 @@ use App\Http\Transformers\SelectlistTransformer;
 use App\Http\Transformers\UsersTransformer;
 use App\Models\Actionlog;
 use App\Models\Asset;
+use App\Models\Accessory;
+use App\Models\Consumable;
 use App\Models\License;
 use App\Models\User;
 use App\Notifications\CurrentInventory;
@@ -31,7 +33,7 @@ class UsersController extends Controller
      * @author [A. Gianotto] [<snipe@snipe.net>]
      * @since [v4.0]
      *
-     * @return \Illuminate\Http\Response
+     * @return array
      */
     public function index(Request $request)
     {
@@ -203,9 +205,6 @@ class UsersController extends Controller
             $users->where('autoassign_licenses', '=', $request->input('autoassign_licenses'));
         }
 
-        if ($request->filled('location_id') != '') {
-            $users = $users->UserLocation($request->input('location_id'), $request->input('search'));
-         }
 
         if (($request->filled('deleted')) && ($request->input('deleted') == 'true')) {
             $users = $users->onlyTrashed();
@@ -362,7 +361,7 @@ class UsersController extends Controller
      * @author [A. Gianotto] [<snipe@snipe.net>]
      * @since [v4.0]
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return array | \Illuminate\Http\JsonResponse
      */
     public function store(SaveUserRequest $request)
     {
@@ -409,7 +408,7 @@ class UsersController extends Controller
      *
      * @author [A. Gianotto] [<snipe@snipe.net>]
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return array | \Illuminate\Http\JsonResponse
      */
     public function show($id)
     {
@@ -432,83 +431,89 @@ class UsersController extends Controller
      * @since [v4.0]
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(SaveUserRequest $request, $id)
     {
         $this->authorize('update', User::class);
 
-        $user = User::find($id);
-        $this->authorize('update', $user);
-
-        /**
-         * This is a janky hack to prevent people from changing admin demo user data on the public demo.
-         * The $ids 1 and 2 are special since they are seeded as superadmins in the demo seeder.
-         *  Thanks, jerks. You are why we can't have nice things. - snipe
-         * 
-         */ 
+        if ($user = User::find($id)) {
 
 
-        if ((($id == 1) || ($id == 2)) && (config('app.lock_passwords'))) {
-            return response()->json(Helper::formatStandardApiResponse('error', null, 'Permission denied. You cannot update user information via API on the demo.'));
-        }
+            $this->authorize('update', $user);
+
+            /**
+             * This is a janky hack to prevent people from changing admin demo user data on the public demo.
+             * The $ids 1 and 2 are special since they are seeded as superadmins in the demo seeder.
+             *  Thanks, jerks. You are why we can't have nice things. - snipe
+             *
+             */
 
 
-        $user->fill($request->all());
-        
-        if ($user->id == $request->input('manager_id')) {
-            return response()->json(Helper::formatStandardApiResponse('error', null, 'You cannot be your own manager'));
-        }
-
-        if ($request->filled('password')) {
-            $user->password = bcrypt($request->input('password'));
-        }
-
-        // We need to use has()  instead of filled()
-        // here because we need to overwrite permissions
-        // if someone needs to null them out
-        if ($request->has('permissions')) {
-            $permissions_array = $request->input('permissions');
-
-            // Strip out the individual superuser permission if the API user isn't a superadmin
-            if (! Auth::user()->isSuperUser()) {
-                unset($permissions_array['superuser']);
+            if ((($id == 1) || ($id == 2)) && (config('app.lock_passwords'))) {
+                return response()->json(Helper::formatStandardApiResponse('error', null, 'Permission denied. You cannot update user information via API on the demo.'));
             }
 
-            $user->permissions = $permissions_array;
-        }
 
+            $user->fill($request->all());
 
-        // Update the location of any assets checked out to this user
-        Asset::where('assigned_type', User::class)
-            ->where('assigned_to', $user->id)->update(['location_id' => $request->input('location_id', null)]);
+            if ($user->id == $request->input('manager_id')) {
+                return response()->json(Helper::formatStandardApiResponse('error', null, 'You cannot be your own manager'));
+            }
 
-        
-        app('App\Http\Requests\ImageUploadRequest')->handleImages($user, 600, 'image', 'avatars', 'avatar');
-          
-        if ($user->save()) {
+            if ($request->filled('password')) {
+                $user->password = bcrypt($request->input('password'));
+            }
 
-            // Check if the request has groups passed and has a value, AND that the user us a superuser
-            if (($request->has('groups')) && (Auth::user()->isSuperUser())) {
+            // We need to use has()  instead of filled()
+            // here because we need to overwrite permissions
+            // if someone needs to null them out
+            if ($request->has('permissions')) {
+                $permissions_array = $request->input('permissions');
 
-                $validator = Validator::make($request->only('groups'), [
-                    'groups.*' => 'integer|exists:permission_groups,id',
-                ]);
-
-                if ($validator->fails()) {
-                    return response()->json(Helper::formatStandardApiResponse('error', null, $validator->errors()));
+                // Strip out the individual superuser permission if the API user isn't a superadmin
+                if (!Auth::user()->isSuperUser()) {
+                    unset($permissions_array['superuser']);
                 }
 
-                // Sync the groups since the user is a superuser and the groups pass validation
-                $user->groups()->sync($request->input('groups'));
-
-
+                $user->permissions = $permissions_array;
             }
 
-            return response()->json(Helper::formatStandardApiResponse('success', (new UsersTransformer)->transformUser($user), trans('admin/users/message.success.update')));
+
+            // Update the location of any assets checked out to this user
+            Asset::where('assigned_type', User::class)
+                ->where('assigned_to', $user->id)->update(['location_id' => $request->input('location_id', null)]);
+
+
+            app('App\Http\Requests\ImageUploadRequest')->handleImages($user, 600, 'image', 'avatars', 'avatar');
+
+            if ($user->save()) {
+
+                // Check if the request has groups passed and has a value, AND that the user us a superuser
+                if (($request->has('groups')) && (Auth::user()->isSuperUser())) {
+
+                    $validator = Validator::make($request->only('groups'), [
+                        'groups.*' => 'integer|exists:permission_groups,id',
+                    ]);
+
+                    if ($validator->fails()) {
+                        return response()->json(Helper::formatStandardApiResponse('error', null, $validator->errors()));
+                    }
+
+                    // Sync the groups since the user is a superuser and the groups pass validation
+                    $user->groups()->sync($request->input('groups'));
+
+
+                }
+
+                return response()->json(Helper::formatStandardApiResponse('success', (new UsersTransformer)->transformUser($user), trans('admin/users/message.success.update')));
+            }
+
+            return response()->json(Helper::formatStandardApiResponse('error', null, $user->getErrors()));
         }
 
-        return response()->json(Helper::formatStandardApiResponse('error', null, $user->getErrors()));
+        return response()->json(Helper::formatStandardApiResponse('error', null, trans('admin/users/message.user_not_found', compact('id'))));
+
     }
 
     /**
@@ -517,18 +522,16 @@ class UsersController extends Controller
      * @author [A. Gianotto] [<snipe@snipe.net>]
      * @since [v4.0]
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(DeleteUserRequest $request, $id)
     {
         $this->authorize('delete', User::class);
-        $user = User::with('assets', 'assets.model', 'consumables', 'accessories', 'licenses', 'userloc')->withTrashed()->find($id);
 
-        $this->authorize('delete', $user);
+        if ($user = User::withTrashed()->find($id)) {
 
+            $this->authorize('delete', $user);
 
-        if ($user) {
-            
             if ($user->delete()) {
 
                 // Remove the user's avatar if they have one
@@ -542,11 +545,12 @@ class UsersController extends Controller
 
                 return response()->json(Helper::formatStandardApiResponse('success', null, trans('admin/users/message.success.delete')));
             }
+
             return response()->json(Helper::formatStandardApiResponse('error', null, trans('admin/users/message.error.delete')));
 
         }
 
-        return response()->json(Helper::formatStandardApiResponse('error', null, trans('admin/users/message.user_not_found', compact('id'))));
+        return response()->json(Helper::formatStandardApiResponse('error', null, trans('admin/users/message.user_not_found')));
 
     }
 
@@ -556,7 +560,7 @@ class UsersController extends Controller
      * @author [A. Gianotto] [<snipe@snipe.net>]
      * @since [v3.0]
      * @param $userId
-     * @return string JSON
+     * @return array | \Illuminate\Http\JsonResponse
      */
     public function assets(Request $request, $id)
     {
@@ -629,14 +633,14 @@ class UsersController extends Controller
      * @author [A. Gianotto] [<snipe@snipe.net>]
      * @since [v3.0]
      * @param $userId
-     * @return string JSON
+     * @return array | \Illuminate\Http\JsonResponse
      */
     public function consumables(Request $request, $id)
     {
         $this->authorize('view', User::class);
         $this->authorize('view', Consumable::class);
         $user = User::findOrFail($id);
-        $this->authorize('update', $user);
+        $this->authorize('view', $user);
         $consumables = $user->consumables;
         return (new ConsumablesTransformer)->transformConsumables($consumables, $consumables->count(), $request);
     }
@@ -647,7 +651,7 @@ class UsersController extends Controller
      * @author [A. Gianotto] [<snipe@snipe.net>]
      * @since [v4.6.14]
      * @param $userId
-     * @return string JSON
+     * @return array
      */
     public function accessories($id)
     {
@@ -666,7 +670,7 @@ class UsersController extends Controller
      * @author [N. Mathar] [<snipe@snipe.net>]
      * @since [v5.0]
      * @param $userId
-     * @return string JSON
+     * @return array | \Illuminate\Http\JsonResponse
      */
     public function licenses($id)
     {
@@ -729,7 +733,7 @@ class UsersController extends Controller
      * @author [Juan Font] [<juanfontalonso@gmail.com>]
      * @since [v4.4.2]
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return array
      */
     public function getCurrentUserInfo(Request $request)
     {
@@ -742,12 +746,14 @@ class UsersController extends Controller
      * @author [E. Taylor] [<dev@evantaylor.name>]
      * @param int $userId
      * @since [v6.0.0]
-     * @return JsonResponse
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function restore($userId = null)
+    public function restore($userId)
     {
+        $this->authorize('delete', User::class);
 
         if ($user = User::withTrashed()->find($userId)) {
+
             $this->authorize('delete', $user);
 
             if ($user->deleted_at == '') {
@@ -766,8 +772,6 @@ class UsersController extends Controller
                 return response()->json(Helper::formatStandardApiResponse('success', null, trans('admin/users/message.success.restored')), 200);
             }
 
-            // Check validation to make sure we're not restoring a user with the same username as an existing user
-            return response()->json(Helper::formatStandardApiResponse('error', null, $user->getErrors()));
         }
 
         return response()->json(Helper::formatStandardApiResponse('error', null, trans('admin/users/message.user_not_found')), 200);

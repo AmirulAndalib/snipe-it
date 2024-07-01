@@ -204,6 +204,23 @@ class User extends SnipeModel implements AuthenticatableContract, AuthorizableCo
         return $this->checkPermissionSection('superuser');
     }
 
+
+    /**
+     * Checks if the can edit their own profile
+     *
+     * @author A. Gianotto <snipe@snipe.net>
+     * @since [v6.3.4]
+     * @return bool
+     */
+    public function canEditProfile() : bool {
+
+        $setting = Setting::getSettings();
+        if ($setting->profile_edit == 1) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Checks if the user is deletable
      *
@@ -572,7 +589,6 @@ class User extends SnipeModel implements AuthenticatableContract, AuthorizableCo
 
             if ($format=='firstname.lastname') {
                 $username = str_slug($first_name) . '.' . str_slug($last_name);
-
             } elseif ($format == 'lastnamefirstinitial') {
                 $username = str_slug($last_name.substr($first_name, 0, 1));
             } elseif ($format == 'firstintial.lastname') {
@@ -589,7 +605,9 @@ class User extends SnipeModel implements AuthenticatableContract, AuthorizableCo
                 $username = str_slug($first_name).str_slug($last_name);
             } elseif ($format == 'firstnamelastinitial') {
                 $username = str_slug(($first_name.substr($last_name, 0, 1)));
-              }
+            } elseif ($format == 'lastname.firstname') {
+                $username = str_slug($last_name).'.'.str_slug($first_name);
+            }
         }
 
         $user['first_name'] = $first_name;
@@ -827,16 +845,16 @@ class User extends SnipeModel implements AuthenticatableContract, AuthorizableCo
 
 
         return $query->where('location_id','=', $location)
-            ->where('first_name', 'LIKE', '%' . $search . '%')
-            ->orWhere('email', 'LIKE', '%' . $search . '%')
-            ->orWhere('last_name', 'LIKE', '%' . $search . '%')
-            ->orWhere('permissions', 'LIKE', '%' . $search . '%')
-            ->orWhere('country', 'LIKE', '%' . $search . '%')
-            ->orWhere('phone', 'LIKE', '%' . $search . '%')
-            ->orWhere('jobtitle', 'LIKE', '%' . $search . '%')
-            ->orWhere('employee_num', 'LIKE', '%' . $search . '%')
-            ->orWhere('username', 'LIKE', '%' . $search . '%')
-            ->orwhereRaw('CONCAT(first_name," ",last_name) LIKE \''.$search.'%\'');
+            ->where('users.first_name', 'LIKE', '%' . $search . '%')
+            ->orWhere('users.email', 'LIKE', '%' . $search . '%')
+            ->orWhere('users.last_name', 'LIKE', '%' . $search . '%')
+            ->orWhere('users.permissions', 'LIKE', '%' . $search . '%')
+            ->orWhere('users.country', 'LIKE', '%' . $search . '%')
+            ->orWhere('users.phone', 'LIKE', '%' . $search . '%')
+            ->orWhere('users.jobtitle', 'LIKE', '%' . $search . '%')
+            ->orWhere('users.employee_num', 'LIKE', '%' . $search . '%')
+            ->orWhere('users.username', 'LIKE', '%' . $search . '%')
+            ->orwhereRaw('CONCAT(users.first_name," ",users.last_name) LIKE \''.$search.'%\'');
 
 
 

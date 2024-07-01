@@ -83,7 +83,7 @@ dir="{{ in_array(app()->getLocale(),['ar-SA','fa-IR', 'he-IL']) ? 'rtl' : 'ltr' 
     <script src="{{ url(asset('js/html5shiv.js')) }}" nonce="{{ csrf_token() }}"></script>
     <script src="{{ url(asset('js/respond.js')) }}" nonce="{{ csrf_token() }}"></script>
 
-    @livewireStyles
+
 
 </head>
 
@@ -353,12 +353,15 @@ dir="{{ in_array(app()->getLocale(),['ar-SA','fa-IR', 'he-IL']) ? 'rtl' : 'ltr' 
                                             </a></li>
 
 
+                                        @can('self.profile')
                                         <li>
                                             <a href="{{ route('profile') }}">
                                                 <i class="fas fa-user fa-fw" aria-hidden="true"></i>
                                                 {{ trans('general.editprofile') }}
                                             </a>
                                         </li>
+                                        @endcan
+
                                         <li>
                                             <a href="{{ route('account.password.index') }}">
                                                 <i class="fa-solid fa-asterisk fa-fw" aria-hidden="true"></i>
@@ -780,7 +783,7 @@ dir="{{ in_array(app()->getLocale(),['ar-SA','fa-IR', 'he-IL']) ? 'rtl' : 'ltr' 
                             <li{!! (Request::is('account/requestable-assets') ? ' class="active"' : '') !!}>
                                 <a href="{{ route('requestable-assets') }}">
                                     <i class="fa fa-laptop fa-fw"></i>
-                                    <span>{{ trans('admin/hardware/general.requestable') }}</span>
+                                    <span>{{ trans('general.requestable_items') }}</span>
                                 </a>
                             </li>
                         @endcan
@@ -946,7 +949,6 @@ dir="{{ in_array(app()->getLocale(),['ar-SA','fa-IR', 'he-IL']) ? 'rtl' : 'ltr' 
 
         {{-- Javascript files --}}
         <script src="{{ url(mix('js/dist/all.js')) }}" nonce="{{ csrf_token() }}"></script>
-        <script defer src="{{ url(mix('js/dist/all-defer.js')) }}" nonce="{{ csrf_token() }}"></script>
 
         <!-- v5-beta: This pGenerator call must remain here for v5 - until fixed - so that the JS password generator works for the user create modal. -->
         <script src="{{ url('js/pGenerator.jquery.js') }}"></script>
@@ -1125,7 +1127,6 @@ dir="{{ in_array(app()->getLocale(),['ar-SA','fa-IR', 'he-IL']) ? 'rtl' : 'ltr' 
 
         @include('partials.bpay')
 
-        @livewireScripts
 
         </body>
 </html>

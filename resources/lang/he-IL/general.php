@@ -134,6 +134,7 @@ return [
     'lastname_firstinitial' => 'שם משפחה ראשי תיבות שם פרטי (smith_j@example.com)',
     'firstinitial.lastname' => 'ראשי תיבות שם פרטי שם משפחה (j.smith@example)',
     'firstnamelastinitial'  => 'שם פרטי ראשי תיבות שם משפחה (janes@example.com)',
+    'lastnamefirstname'      => 'שם משפחה שם פרטי (smith.jane@example.com)',
     'first_name'			=> 'שם פרטי',
     'first_name_format'		=> 'שם פרטי (jane@example.com)',
     'files'                 => 'קבצים',
@@ -157,7 +158,7 @@ return [
     'image_upload'         	=> 'העלאת תמונה',
     'filetypes_accepted_help'    => 'סוגי קובץ אפשריים הם :types. גודל קובץ אפשרי מקסימלי:size.',
     'filetypes_size_help'   => 'גודל קובץ מותר הוא :size.',
-    'image_filetypes_help'  => 'סוגי הקבצים המותרים הם jpg,‏ webp,‏ png,‏ gif ו־svg. גודל ההעלאה המרבי המותר הוא :size.',
+    'image_filetypes_help'  => 'Accepted filetypes are jpg, webp, png, gif, svg, and avif. Max upload size allowed is :size.',
     'unaccepted_image_type'  => 'This image file was not readable. Accepted filetypes are jpg, webp, png, gif, and svg. The mimetype of this file is: :mimetype.',
     'import'         	    => 'יְבוּא',
     'import_this_file'      => 'Map fields and process this file',
@@ -239,6 +240,7 @@ return [
     'restored'				=> 'שוחזר',
     'restore'				=> 'שחזר',
     'requestable_models'    => 'מודלים שנדרשו',
+    'requestable_items'     => 'Requestable Items',
     'requested'				=> 'מבוקש',
     'requested_date'        => 'התאריך המבוקש',
     'requested_assets'      => 'נכסים שנדרשו',
@@ -526,6 +528,7 @@ return [
     'permission_denied_superuser_demo' => 'Permission denied. You cannot update user information for superadmins on the demo.',
     'pwd_reset_not_sent' => 'User is not activated, is LDAP synced, or does not have an email address',
     'error_sending_email' => 'Error sending email',
+    'sad_panda' => 'Sad panda. You are not authorized to do the thing. Maybe <a href=":link">return to the dashboard</a>, or contact your administrator.',
     'bulk' => [
             'delete' =>
                 [

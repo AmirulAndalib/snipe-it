@@ -134,6 +134,7 @@ return [
     'lastname_firstinitial' => 'Etternavn Fornavn Initialer (smith_j@example.com)',
     'firstinitial.lastname' => 'Fornavn Initialer Etternavn (j.smith@example.com)',
     'firstnamelastinitial'  => 'Fornavn Etternavn Initialer (janes@example.com)',
+    'lastnamefirstname'      => 'Last Name First Name (smith.jane@example.com)',
     'first_name'			=> 'Fornavn',
     'first_name_format'		=> 'Fornavn (oladunk@example.com)',
     'files'                 => 'Filer',
@@ -157,7 +158,7 @@ return [
     'image_upload'         	=> 'Last opp bilde',
     'filetypes_accepted_help'    => 'Godkjent filtype er :types. Maks opplastingsstørrelse er :size.|Aksepterte filtyper er :types. Maks opplastingsstørrelse er :size.',
     'filetypes_size_help'   => 'Maks opplastingsstørrelse er :size.',
-    'image_filetypes_help'  => 'Tillatte filtyper er jpg, webp, png, gif, og svg. Maks filstørrelse er :size.',
+    'image_filetypes_help'  => 'Accepted filetypes are jpg, webp, png, gif, svg, and avif. Max upload size allowed is :size.',
     'unaccepted_image_type'  => 'Denne bildefilen var ikke lesbar. Aksepterte filtyper er jpg, webp, png, gif og svg. Mime-typen til denne filen er :mimetype.',
     'import'         	    => 'Importer',
     'import_this_file'      => 'Kartfelter og behandle denne filen',
@@ -239,6 +240,7 @@ return [
     'restored'				=> 'gjenopprettet',
     'restore'				=> 'Gjenopprett',
     'requestable_models'    => 'Forespørrbare modeller',
+    'requestable_items'     => 'Requestable Items',
     'requested'				=> 'Forespurt',
     'requested_date'        => 'Forespurt dato',
     'requested_assets'      => 'Forespurte eiendeler',
@@ -526,6 +528,7 @@ return [
     'permission_denied_superuser_demo' => 'Tillatelse nektet. Du kan ikke oppdatere brukerinformasjon for superadmins på demo.',
     'pwd_reset_not_sent' => 'Brukeren er ikke aktivert, er LDAP synkronisert eller har ikke en e-postadresse',
     'error_sending_email' => 'Feil ved sending av e-post',
+    'sad_panda' => 'Sad panda. You are not authorized to do the thing. Maybe <a href=":link">return to the dashboard</a>, or contact your administrator.',
     'bulk' => [
             'delete' =>
                 [
